@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 export default function handler(req, res) {
   const { data } = req.query;
 
@@ -11,19 +8,9 @@ export default function handler(req, res) {
   );
 
   if (Date.now() > payload.exp) {
-    return res.status(403).send("Expired link");
+    return res.status(403).send("Expired");
   }
 
-  const filePath = path.join(process.cwd(), "files", payload.file);
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).send("Not found");
-  }
-
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename=${payload.file}`
-  );
-
-  res.sendFile(filePath);
+  // Redirect to public file
+  res.redirect(`/files/${payload.file}`);
 }
