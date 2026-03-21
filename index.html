@@ -3,79 +3,298 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> iHost</title>
-  <link rel="stylesheet" href="style.css">
+  <title> iHost | Secure Downloads</title>
+  <style>
+    /* Modern Apple-inspired CSS 
+      Features: CSS Variables, Dark Mode, Flexbox/Grid, Smooth Transitions
+    */
+    :root {
+      --bg-color: #f5f5f7;
+      --card-bg: #ffffff;
+      --text-main: #1d1d1f;
+      --text-muted: #86868b;
+      --accent: #0066cc;
+      --accent-hover: #0077ed;
+      --border-radius: 16px;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Automatic Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #000000;
+        --card-bg: #1c1c1e;
+        --text-main: #f5f5f7;
+        --text-muted: #86868b;
+        --accent: #2997ff;
+        --accent-hover: #4ba6ff;
+        --shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        --shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      font-weight: 400;
+    }
+
+    /* Grid Layout for Files */
+    #files-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    /* Card Styling */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--border-radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    /* Media Previews */
+    .media-container {
+      width: 100%;
+      height: 140px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      background-color: rgba(134, 134, 139, 0.05);
+      overflow: hidden;
+    }
+
+    .icon {
+      font-size: 4rem;
+    }
+
+    .video-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background-color: #000;
+    }
+
+    /* Typography */
+    .file-name {
+      font-size: 1.05rem;
+      font-weight: 500;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 20px;
+    }
+
+    /* Buttons */
+    .download-btn {
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      width: 100%;
+    }
+
+    .download-btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .download-btn:active {
+      transform: scale(0.96);
+    }
+
+    .download-btn.loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    /* Loading / Error States */
+    .status-message {
+      text-align: center;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+      padding: 40px;
+      font-size: 1.1rem;
+    }
+  </style>
 </head>
 <body>
+
   <div class="container">
-    <h1> iHost</h1>
-    <p class="subtitle">Secure Downloads</p>
+    <header>
+      <h1> iHost</h1>
+      <p class="subtitle">Secure Downloads</p>
+    </header>
+    
     <div id="files-list">
-      <!-- File cards dynamically added here -->
+      <div class="status-message">Loading your files...</div>
     </div>
   </div>
 
   <script>
-    // Load files from server
+    // Utility to get a nice emoji based on file extension
+    function getFileIcon(ext) {
+      const icons = {
+        'zip': '📦', 'rar': '📦', 'tar': '📦', 'gz': '📦',
+        'pdf': '📄', 'doc': '📝', 'docx': '📝', 'txt': '📝',
+        'mp3': '🎵', 'wav': '🎵', 'flac': '🎵',
+        'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️', 'svg': '🖼️'
+      };
+      return icons[ext] || '📁';
+    }
+
+    // Load files from the server
     async function loadFiles() {
+      const container = document.getElementById('files-list');
+      
       try {
         const res = await fetch('/api/list');
+        if (!res.ok) throw new Error('Network response was not ok');
+        
         const data = await res.json();
-        const container = document.getElementById('files-list');
+        
+        // Clear loading message
+        container.innerHTML = '';
 
+        if (!data.files || data.files.length === 0) {
+          container.innerHTML = '<div class="status-message">No files available.</div>';
+          return;
+        }
+
+        // Render each file card
         data.files.forEach(file => {
           const ext = file.split('.').pop().toLowerCase();
           const card = document.createElement('div');
           card.className = 'card';
 
-          // Choose icon
-          let icon = '📄';
-          if (ext === 'zip') icon = '📦';
-          else if (ext === 'pdf') icon = '📄';
-          else if (ext === 'mp3') icon = '🎵';
-          else if (ext === 'jpg' || ext === 'png') icon = '🖼';
-
-          // Card title
-          const title = document.createElement('div');
-          title.className = 'card-title';
-          title.innerText = `${icon} ${file}`;
-          card.appendChild(title);
-
-          // Video preview for mp4/mov/webm
-          if (ext === 'mp4' || ext === 'mov' || ext === 'webm') {
+          // 1. Media Container (Video or Icon)
+          const mediaContainer = document.createElement('div');
+          mediaContainer.className = 'media-container';
+          
+          if (['mp4', 'mov', 'webm'].includes(ext)) {
             const video = document.createElement('video');
             video.src = `/files/${file}`;
             video.controls = true;
-            video.muted = true;
-            video.loop = true;
             video.className = 'video-preview';
-            card.appendChild(video);
+            // Preload metadata to show first frame, but don't autoplay to save bandwidth
+            video.preload = "metadata"; 
+            mediaContainer.appendChild(video);
+          } else {
+            const icon = document.createElement('div');
+            icon.className = 'icon';
+            icon.innerText = getFileIcon(ext);
+            mediaContainer.appendChild(icon);
           }
 
-          // Click triggers hashed download link
-          card.onclick = () => downloadFile(file);
+          // 2. File Name
+          const title = document.createElement('div');
+          title.className = 'file-name';
+          title.innerText = file;
+          title.title = file; // Shows full name on hover if truncated
 
+          // 3. Download Button
+          const btn = document.createElement('button');
+          btn.className = 'download-btn';
+          btn.innerText = 'Download';
+          btn.onclick = (e) => downloadFile(file, btn);
+
+          // Assemble Card
+          card.appendChild(mediaContainer);
+          card.appendChild(title);
+          card.appendChild(btn);
           container.appendChild(card);
         });
 
       } catch (err) {
-        console.error('Failed to load files', err);
-        document.getElementById('files-list').innerText = "Failed to load files.";
+        console.error('Failed to load files:', err);
+        container.innerHTML = '<div class="status-message">Failed to load files. Please try again later.</div>';
       }
     }
 
     // Generate hashed download link
-    async function downloadFile(file) {
+    async function downloadFile(file, buttonElement) {
+      // Prevent double clicks
+      if (buttonElement.classList.contains('loading')) return;
+      
+      // UI feedback
+      const originalText = buttonElement.innerText;
+      buttonElement.innerText = 'Generating...';
+      buttonElement.classList.add('loading');
+
       try {
         const res = await fetch(`/api/generate?file=${encodeURIComponent(file)}`);
+        if (!res.ok) throw new Error('Failed to fetch download link');
+        
         const data = await res.json();
-        window.location.href = data.url; // redirect to hashed download
+        
+        if (data.url) {
+          window.location.href = data.url; // Redirect to hashed download
+        } else {
+          throw new Error('No URL returned');
+        }
       } catch (err) {
-        alert('Failed to generate download link.');
+        console.error(err);
+        alert(`Failed to generate download link for ${file}.`);
+      } finally {
+        // Reset button state
+        buttonElement.innerText = originalText;
+        buttonElement.classList.remove('loading');
       }
     }
 
-    loadFiles();
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadFiles);
   </script>
 </body>
 </html>
