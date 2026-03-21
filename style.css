@@ -35,3 +35,24 @@ h1 {
   transform: scale(1.05);
   background: rgba(255,255,255,0.1);
 }
+
+.card:active {
+  transform: scale(0.97);
+}
+
+.video-preview {
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  outline: 1px solid rgba(255,255,255,0.2);
+}
+
+.card:hover video {
+  transform: scale(1.02);
+  transition: 0.2s;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 16px;
+}
